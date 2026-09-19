@@ -1,427 +1,608 @@
 <!DOCTYPE html>
 <html lang="km">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
-<title>🐶 កំណត់ត្រារូបភាព និងលាមកឆ្កែ</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #f2f2f7;
-    --bg-elevated: #ffffff;
-    --card: rgba(255,255,255,.72);
-    --nav: rgba(242,242,247,.8);
-    --ink: #1c1c1e;
-    --ink-2: #3c3c43;
-    --muted: #8e8e93;
-    --separator: rgba(60,60,67,.12);
-    --accent: #007aff;
-    --skeleton: #e5e5ea;
-    --skeleton-hi: #f2f2f7;
-    --radius: 22px;
-    --radius-sm: 14px;
-    --shadow: 0 1px 3px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.06);
-    --safe-t: env(safe-area-inset-top, 0px);
-    --safe-b: env(safe-area-inset-bottom, 0px);
-    --safe-l: env(safe-area-inset-left, 0px);
-    --safe-r: env(safe-area-inset-right, 0px);
-  }
-  @media (prefers-color-scheme: dark) {
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+  <title>🐶 កំណត់ត្រារូបភាព និងលាមកឆ្កែ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <style>
     :root {
-      --bg: #000000;
-      --bg-elevated: #1c1c1e;
-      --card: rgba(28,28,30,.72);
-      --nav: rgba(0,0,0,.7);
-      --ink: #ffffff;
-      --ink-2: #ebebf5;
-      --muted: #98989f;
-      --separator: rgba(84,84,88,.5);
-      --accent: #0a84ff;
-      --skeleton: #2c2c2e;
-      --skeleton-hi: #3a3a3c;
-      --shadow: 0 1px 3px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.5);
+      --bg: #f2f2f7;
+      --bg-elevated: #ffffff;
+      --card: rgba(255, 255, 255, .72);
+      --nav: rgba(242, 242, 247, .8);
+      --ink: #1c1c1e;
+      --ink-2: #3c3c43;
+      --muted: #8e8e93;
+      --separator: rgba(60, 60, 67, .12);
+      --accent: #007aff;
+      --skeleton: #e5e5ea;
+      --skeleton-hi: #f2f2f7;
+      --radius: 22px;
+      --radius-sm: 14px;
+      --shadow: 0 1px 3px rgba(0, 0, 0, .04), 0 8px 24px rgba(0, 0, 0, .06);
+      --safe-t: env(safe-area-inset-top, 0px);
+      --safe-b: env(safe-area-inset-bottom, 0px);
+      --safe-l: env(safe-area-inset-left, 0px);
+      --safe-r: env(safe-area-inset-right, 0px);
     }
-  }
 
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html { -webkit-text-size-adjust: 100%; }
-  body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
-                 "Noto Sans Khmer", Roboto, Helvetica, Arial, sans-serif;
-    background: var(--bg);
-    color: var(--ink);
-    line-height: 1.55;
-    letter-spacing: .1px;
-    padding: 0 var(--safe-r) var(--safe-b) var(--safe-l);
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
-  }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #000000;
+        --bg-elevated: #1c1c1e;
+        --card: rgba(28, 28, 30, .72);
+        --nav: rgba(0, 0, 0, .7);
+        --ink: #ffffff;
+        --ink-2: #ebebf5;
+        --muted: #98989f;
+        --separator: rgba(84, 84, 88, .5);
+        --accent: #0a84ff;
+        --skeleton: #2c2c2e;
+        --skeleton-hi: #3a3a3c;
+        --shadow: 0 1px 3px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .5);
+      }
+    }
 
-  /* iOS-style large-title nav bar with glass blur */
-  .nav {
-    position: sticky; top: 0; z-index: 20;
-    padding: calc(var(--safe-t) + 14px) 20px 12px;
-    background: var(--nav);
-    -webkit-backdrop-filter: saturate(180%) blur(20px);
-    backdrop-filter: saturate(180%) blur(20px);
-    border-bottom: .5px solid var(--separator);
-  }
-  .nav h1 {
-    margin: 0;
-    font-size: clamp(1.6rem, 6vw, 2.1rem);
-    font-weight: 700;
-    letter-spacing: -.02em;
-  }
-  .nav p { margin: 2px 0 0; color: var(--muted); font-size: .92rem; }
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-  main {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 18px clamp(14px, 4vw, 22px) 60px;
-  }
+    html {
+      -webkit-text-size-adjust: 100%;
+    }
 
-  /* Stats — iOS segmented cards */
-  .stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-bottom: 26px;
-  }
-  .stat {
-    background: var(--bg-elevated);
-    border-radius: var(--radius-sm);
-    box-shadow: var(--shadow);
-    padding: 14px 8px;
-    text-align: center;
-  }
-  .stat .num { font-size: clamp(1.3rem, 5vw, 1.7rem); font-weight: 700; letter-spacing: -.01em; }
-  .stat .lbl { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+        "Noto Sans Khmer", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.55;
+      letter-spacing: .1px;
+      padding: 0 var(--safe-r) var(--safe-b) var(--safe-l);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
 
-  /* Day sections */
-  .day-group { margin-bottom: 30px; }
-  .day-header {
-    position: sticky; top: calc(var(--safe-t) + 62px); z-index: 10;
-    display: flex; justify-content: space-between; align-items: baseline;
-    gap: 10px;
-    padding: 8px 4px;
-    margin-bottom: 4px;
-    background: linear-gradient(var(--bg) 70%, transparent);
-  }
-  .day-header .title { font-size: 1.02rem; font-weight: 700; letter-spacing: -.01em; }
-  .day-header .count {
-    font-size: .8rem; color: var(--muted); font-weight: 600;
-    background: var(--bg-elevated); padding: 3px 10px; border-radius: 999px;
-    box-shadow: var(--shadow); white-space: nowrap;
-  }
+    /* iOS-style large-title nav bar with glass blur */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      padding: calc(var(--safe-t) + 14px) 20px 12px;
+      background: var(--nav);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      backdrop-filter: saturate(180%) blur(20px);
+      border-bottom: .5px solid var(--separator);
+      text-align: center;
+    }
 
-  .grid {
-    display: grid; gap: clamp(8px, 2.4vw, 12px);
-    grid-template-columns: repeat(auto-fill, minmax(min(150px, 46%), 1fr));
-  }
-  .tile {
-    position: relative;
-    aspect-ratio: 1;
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-    background: var(--skeleton);
-    box-shadow: var(--shadow);
-    cursor: pointer;
-  }
-  .tile img {
-    width: 100%; height: 100%; object-fit: cover; display: block;
-    opacity: 0; transition: opacity .35s ease, transform .25s ease;
-  }
-  .tile img.loaded { opacity: 1; }
-  @media (hover: hover) { .tile:active img, .tile:hover img { transform: scale(1.04); } }
+    .nav h1 {
+      margin: 0;
+      font-size: clamp(1.6rem, 6vw, 2.1rem);
+      font-weight: 700;
+      letter-spacing: -.02em;
+    }
 
-  /* Skeleton shimmer */
-  .skeleton {
-    background: linear-gradient(100deg, var(--skeleton) 30%, var(--skeleton-hi) 50%, var(--skeleton) 70%);
-    background-size: 200% 100%;
-    animation: shimmer 1.3s infinite linear;
-  }
-  @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
-  .sk-tile { aspect-ratio: 1; border-radius: var(--radius-sm); }
+    .nav p {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: .92rem;
+    }
 
-  /* Loaders / states */
-  .center { text-align: center; color: var(--muted); padding: 40px 16px; font-size: .95rem; }
-  .spinner {
-    width: 26px; height: 26px; margin: 0 auto 12px;
-    border: 3px solid var(--separator); border-top-color: var(--accent);
-    border-radius: 50%; animation: spin .8s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  #sentinel { height: 1px; }
-  #more { padding: 24px 0; }
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 18px clamp(14px, 4vw, 22px) 60px;
+    }
 
-  .notice {
-    background: var(--bg-elevated); border-radius: var(--radius);
-    box-shadow: var(--shadow); padding: 22px; margin: 8px 0;
-    color: var(--ink-2); font-size: .95rem; text-align: center;
-  }
-  .notice code {
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    background: var(--skeleton); padding: 2px 7px; border-radius: 6px; font-size: .85em;
-  }
+    /* Stats — iOS segmented cards */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 26px;
+    }
 
-  /* Lightbox */
-  #lightbox {
-    position: fixed; inset: 0; z-index: 50;
-    display: flex; align-items: center; justify-content: center;
-    padding: max(16px, var(--safe-t)) 16px max(16px, var(--safe-b));
-    background: rgba(0,0,0,.7);
-    -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px);
-    opacity: 0; pointer-events: none; transition: opacity .25s ease;
-  }
-  #lightbox.open { opacity: 1; pointer-events: auto; }
-  #lightbox img {
-    max-width: 100%; max-height: 100%;
-    border-radius: 18px; box-shadow: 0 20px 60px rgba(0,0,0,.5);
-    transform: scale(.96); transition: transform .25s ease;
-  }
-  #lightbox.open img { transform: scale(1); }
-  #lightbox .close {
-    position: absolute; top: max(14px, var(--safe-t)); right: 16px;
-    width: 38px; height: 38px; border-radius: 50%;
-    background: rgba(120,120,128,.5); color: #fff;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.5rem; cursor: pointer;
-    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-  }
+    .stat {
+      background: var(--bg-elevated);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow);
+      padding: 14px 8px;
+      text-align: center;
+    }
 
-  footer {
-    text-align: center; color: var(--muted); font-size: .8rem;
-    padding: 10px 20px 30px;
-  }
-  footer code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-</style>
+    .stat .num {
+      font-size: clamp(1.3rem, 5vw, 1.7rem);
+      font-weight: 700;
+      letter-spacing: -.01em;
+    }
+
+    .stat .lbl {
+      font-size: .74rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* Day sections */
+    .day-group {
+      margin-bottom: 30px;
+    }
+
+    .day-header {
+      position: sticky;
+      top: calc(var(--safe-t) + 62px);
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 4px;
+      margin-bottom: 4px;
+      background: linear-gradient(var(--bg) 78%, transparent);
+    }
+
+    .day-header .dh-text {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .day-header .title {
+      font-size: 1.02rem;
+      font-weight: 700;
+      letter-spacing: -.01em;
+      line-height: 1.4;
+    }
+
+    .day-header .sub {
+      font-size: .8rem;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+
+    .day-header .count {
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .day-header .count {
+      font-size: .8rem;
+      color: var(--muted);
+      font-weight: 600;
+      background: var(--bg-elevated);
+      padding: 3px 10px;
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+      white-space: nowrap;
+    }
+
+    .grid {
+      display: grid;
+      gap: clamp(8px, 2.4vw, 12px);
+      grid-template-columns: repeat(auto-fill, minmax(min(150px, 46%), 1fr));
+    }
+
+    .tile {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background: var(--skeleton);
+      box-shadow: var(--shadow);
+      cursor: pointer;
+    }
+
+    .tile img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      opacity: 0;
+      transition: opacity .35s ease, transform .25s ease;
+    }
+
+    .tile img.loaded {
+      opacity: 1;
+    }
+
+    @media (hover: hover) {
+
+      .tile:active img,
+      .tile:hover img {
+        transform: scale(1.04);
+      }
+    }
+
+    /* Skeleton shimmer */
+    .skeleton {
+      background: linear-gradient(100deg, var(--skeleton) 30%, var(--skeleton-hi) 50%, var(--skeleton) 70%);
+      background-size: 200% 100%;
+      animation: shimmer 1.3s infinite linear;
+    }
+
+    @keyframes shimmer {
+      from {
+        background-position: 200% 0;
+      }
+
+      to {
+        background-position: -200% 0;
+      }
+    }
+
+    .sk-tile {
+      aspect-ratio: 1;
+      border-radius: var(--radius-sm);
+    }
+
+    /* Loaders / states */
+    .center {
+      text-align: center;
+      color: var(--muted);
+      padding: 40px 16px;
+      font-size: .95rem;
+    }
+
+    .spinner {
+      width: 26px;
+      height: 26px;
+      margin: 0 auto 12px;
+      border: 3px solid var(--separator);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    #sentinel {
+      height: 1px;
+    }
+
+    #more {
+      padding: 24px 0;
+    }
+
+    .notice {
+      background: var(--bg-elevated);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px;
+      margin: 8px 0;
+      color: var(--ink-2);
+      font-size: .95rem;
+      text-align: center;
+    }
+
+    .notice code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      background: var(--skeleton);
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-size: .85em;
+    }
+
+    /* Lightbox */
+    #lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: max(16px, var(--safe-t)) 16px max(16px, var(--safe-b));
+      background: rgba(0, 0, 0, .7);
+      -webkit-backdrop-filter: blur(24px);
+      backdrop-filter: blur(24px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s ease;
+    }
+
+    #lightbox.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #lightbox img {
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: 18px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .5);
+      transform: scale(.96);
+      transition: transform .25s ease;
+    }
+
+    #lightbox.open img {
+      transform: scale(1);
+    }
+
+    #lightbox .close {
+      position: absolute;
+      top: max(14px, var(--safe-t));
+      right: 16px;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: rgba(120, 120, 128, .5);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      cursor: pointer;
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+    }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: .8rem;
+      padding: 10px 20px 30px;
+    }
+
+    footer code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+  </style>
 </head>
-<body>
-<div class="nav">
-  <h1>🐶 កំណត់ត្រារូបភាព និងលាមកឆ្កែ</h1>
-  <p>រូបភាពរៀបចំតាមកាលបរិច្ឆេទ</p>
-</div>
 
-<main>
-  <div class="stats">
-    <div class="stat"><div class="num" id="statPhotos">–</div><div class="lbl">📸 រូបភាព</div></div>
-    <div class="stat"><div class="num" id="statDays">–</div><div class="lbl">📅 ថ្ងៃសរុប</div></div>
-    <div class="stat"><div class="num" id="statLatest">–</div><div class="lbl">🕘 ថ្មីបំផុត</div></div>
+<body>
+  <div class="nav">
+    <h1>🐶 កំណត់ត្រារូបភាព និងលាមកឆ្កែ</h1>
+    <p>រូបភាពរៀបចំតាមកាលបរិច្ឆេទ</p>
   </div>
 
-  <div id="timeline"></div>
-  <div id="more"></div>
-  <div id="sentinel"></div>
-</main>
+  <main>
+    <div class="stats">
+      <div class="stat">
+        <div class="num" id="statPhotos">–</div>
+        <div class="lbl">📸 រូបភាព</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="statDays">–</div>
+        <div class="lbl">📅 ថ្ងៃសរុប</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="statLatest">–</div>
+        <div class="lbl">🕘 ថ្មីបំផុត</div>
+      </div>
+    </div>
 
-<div id="lightbox"><span class="close" role="button" aria-label="បិទ">×</span><img alt="រូបភាពពេញ"></div>
+    <div id="timeline"></div>
+    <div id="more"></div>
+    <div id="sentinel"></div>
+  </main>
 
-<footer>
-  រូបភាពត្រូវបានអានពីថត <code>assets/&lt;ddmmyyyy&gt;/</code> ក្នុង repo ដោយផ្ទាល់។
-</footer>
+  <div id="lightbox"><span class="close" role="button" aria-label="បិទ">×</span><img alt="រូបភាពពេញ"></div>
 
-<script>
-  // ---- Optional manual overrides (blank = auto-detect from the github.io URL) ----
-  const CONFIG = {
-    owner: "",
-    repo: "",
-    branch: "",
-    assetsPath: "assets",
-  };
+  <footer>
+    រូបភាពត្រូវបានអានពីថត <code>assets/&lt;ddmmyyyy&gt;/</code> ក្នុង repo ដោយផ្ទាល់។
+  </footer>
 
-  const IMG_RE = /\.(jpe?g|png|gif|webp|avif|bmp)$/i;
-  const BATCH = 4;                 // day-folders rendered per scroll page
-  const LOCALE = "km-KH";
+  <script src="momentkh.js"></script>
+  <script>
+    // ---- Optional manual overrides (blank = auto-detect from the github.io URL) ----
+    const CONFIG = {
+      owner: "",
+      repo: "",
+      branch: "",
+      assetsPath: "assets",
+    };
 
-  // ---- repo detection ----
-  function detectRepo() {
-    let { owner, repo } = CONFIG;
-    const host = location.hostname;
-    const parts = location.pathname.split("/").filter(Boolean);
-    if (!owner && host.endsWith(".github.io")) owner = host.replace(".github.io", "");
-    if (!repo) repo = parts.length ? parts[0] : host;
-    return { owner, repo };
-  }
-  const api = (path) => {
-    const { owner, repo } = detectRepo();
-    const ref = CONFIG.branch ? `?ref=${encodeURIComponent(CONFIG.branch)}` : "";
-    return `https://api.github.com/repos/${owner}/${repo}/contents/${path}${ref}`;
-  };
+    const IMG_RE = /\.(jpe?g|png|gif|webp|avif|bmp)$/i;
+    const BATCH = 4;                 // day-folders rendered per scroll page
+    const LOCALE = "km-KH";
 
-  async function ghJson(url) {
-    const res = await fetch(url, { headers: { Accept: "application/vnd.github+json" } });
-    if (!res.ok) { const e = new Error(`GitHub API ${res.status}`); e.status = res.status; throw e; }
-    return res.json();
-  }
-
-  // ---- dates ----
-  function parseFolderDate(name) {
-    const m = /^(\d{2})(\d{2})(\d{4})$/.exec(name);
-    if (!m) return null;
-    const [, dd, mm, yyyy] = m;
-    const d = new Date(+yyyy, +mm - 1, +dd);
-    return isNaN(d) ? null : d;
-  }
-  const dayLabel = (d) => {
-    const today = new Date(); today.setHours(0,0,0,0);
-    const that = new Date(d); that.setHours(0,0,0,0);
-    const diff = Math.round((today - that) / 86400000);
-    const base = d.toLocaleDateString(LOCALE, { weekday:"long", day:"numeric", month:"long", year:"numeric" });
-    if (diff === 0) return `ថ្ងៃនេះ · ${base}`;
-    if (diff === 1) return `ម្សិលមិញ · ${base}`;
-    return base;
-  };
-  const shortDate = (d) => d.toLocaleDateString(LOCALE, { day:"numeric", month:"short" });
-  const numSort = (a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
-
-  // ---- DOM helpers ----
-  const $ = (id) => document.getElementById(id);
-  const notice = (html) => { $("timeline").innerHTML = `<div class="notice">${html}</div>`; $("more").innerHTML=""; };
-
-  // ---- state ----
-  let dirs = [];
-  let cursor = 0;
-  let loading = false;
-  let loadedPhotos = 0;
-  let observer;
-
-  async function init() {
-    const { owner, repo } = detectRepo();
-    if (!owner || !repo) {
-      notice(`រកមិនឃើញ repository ទេ។ សូមបើក <code>index.html</code> ហើយកំណត់
-        <code>CONFIG.owner</code> និង <code>CONFIG.repo</code> ដោយផ្ទាល់។`);
-      return;
+    // ---- repo detection ----
+    function detectRepo() {
+      let {owner, repo} = CONFIG;
+      const host = location.hostname;
+      const parts = location.pathname.split("/").filter(Boolean);
+      if (!owner && host.endsWith(".github.io")) owner = host.replace(".github.io", "");
+      if (!repo) repo = parts.length ? parts[0] : host;
+      return {owner, repo};
     }
-    $("timeline").innerHTML = `<div class="center"><div class="spinner"></div>កំពុងផ្ទុករូបភាព…</div>`;
+    const api = (path) => {
+      const {owner, repo} = detectRepo();
+      const ref = CONFIG.branch ? `?ref=${encodeURIComponent(CONFIG.branch)}` : "";
+      return `https://api.github.com/repos/${owner}/${repo}/contents/${path}${ref}`;
+    };
 
-    try {
-      const listing = await ghJson(api(CONFIG.assetsPath));
-      dirs = listing
-        .filter((it) => it.type === "dir" && parseFolderDate(it.name))
-        .map((it) => ({ name: it.name, date: parseFolderDate(it.name) }))
-        .sort((a, b) => b.date - a.date);
-    } catch (e) {
-      if (e.status === 404) {
-        notice(`មិនទាន់មានថត <code>${CONFIG.assetsPath}/</code> ក្នុង
+    async function ghJson(url) {
+      const res = await fetch(url, {headers: {Accept: "application/vnd.github+json"}});
+      if (!res.ok) {const e = new Error(`GitHub API ${res.status}`); e.status = res.status; throw e;}
+      return res.json();
+    }
+
+    // ---- dates ----
+    function parseFolderDate(name) {
+      const m = /^(\d{2})(\d{2})(\d{4})$/.exec(name);
+      if (!m) return null;
+      const [, dd, mm, yyyy] = m;
+      const d = new Date(+yyyy, +mm - 1, +dd);
+      return isNaN(d) ? null : d;
+    }
+    // Full Khmer lunar (Chhankitek) date, e.g. "ថ្ងៃសៅរ៍ ៨កើត ខែភទ្របទ ឆ្នាំមមី អដ្ឋស័ក ពុទ្ធសករាជ ២៥៧០"
+    const lunarLabel = (d) => {
+      try { return momentkh.format(momentkh.fromDate(d)); }
+      catch { return d.toLocaleDateString(LOCALE, {weekday: "long", day: "numeric", month: "long", year: "numeric"}); }
+    };
+    // Relative + Gregorian (Khmer) subtitle, e.g. "ថ្ងៃនេះ · ១៩ កញ្ញា ២០២៦"
+    const gregLabel = (d) => {
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const that = new Date(d); that.setHours(0, 0, 0, 0);
+      const diff = Math.round((today - that) / 86400000);
+      const base = d.toLocaleDateString(LOCALE, {day: "numeric", month: "long", year: "numeric"});
+      if (diff === 0) return `ថ្ងៃនេះ · ${base}`;
+      if (diff === 1) return `ម្សិលមិញ · ${base}`;
+      return base;
+    };
+    const shortDate = (d) => d.toLocaleDateString(LOCALE, {day: "numeric", month: "short"});
+    const numSort = (a, b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: "base"});
+
+    // ---- DOM helpers ----
+    const $ = (id) => document.getElementById(id);
+    const notice = (html) => {$("timeline").innerHTML = `<div class="notice">${html}</div>`; $("more").innerHTML = "";};
+
+    // ---- state ----
+    let dirs = [];
+    let cursor = 0;
+    let loading = false;
+    let loadedPhotos = 0;
+    let observer;
+
+    async function init() {
+      const {owner, repo} = detectRepo();
+      if (!owner || !repo) {
+        notice(`រកមិនឃើញ repository ទេ។ សូមបើក <code>index.html</code> ហើយកំណត់
+        <code>CONFIG.owner</code> និង <code>CONFIG.repo</code> ដោយផ្ទាល់។`);
+        return;
+      }
+      $("timeline").innerHTML = `<div class="center"><div class="spinner"></div>កំពុងផ្ទុករូបភាព…</div>`;
+
+      try {
+        const listing = await ghJson(api(CONFIG.assetsPath));
+        dirs = listing
+          .filter((it) => it.type === "dir" && parseFolderDate(it.name))
+          .map((it) => ({name: it.name, date: parseFolderDate(it.name)}))
+          .sort((a, b) => b.date - a.date);
+      } catch (e) {
+        if (e.status === 404) {
+          notice(`មិនទាន់មានថត <code>${CONFIG.assetsPath}/</code> ក្នុង
           <code>${owner}/${repo}</code> ទេ។ សូមបន្ថែមថតតាមកាលបរិច្ឆេទ ដូចជា
           <code>${CONFIG.assetsPath}/31122027/1.jpg</code> រួច push។`);
-      } else if (e.status === 403) {
-        notice(`លើសកម្រិតការហៅ GitHub API (៦០ ដង/ម៉ោង ក្នុងមួយ IP)។ សូមរង់ចាំបន្តិចហើយ refresh។`);
-      } else {
-        notice(`មិនអាចផ្ទុករូបភាពបានទេ (${e.message})។ សូមប្រាកដថា repo ជាសាធារណៈ។`);
+        } else if (e.status === 403) {
+          notice(`លើសកម្រិតការហៅ GitHub API (៦០ ដង/ម៉ោង ក្នុងមួយ IP)។ សូមរង់ចាំបន្តិចហើយ refresh។`);
+        } else {
+          notice(`មិនអាចផ្ទុករូបភាពបានទេ (${e.message})។ សូមប្រាកដថា repo ជាសាធារណៈ។`);
+        }
+        return;
       }
-      return;
-    }
 
-    if (!dirs.length) {
-      notice(`មិនទាន់មានថតរូបភាពតាមកាលបរិច្ឆេទទេ។ សូមបន្ថែម
+      if (!dirs.length) {
+        notice(`មិនទាន់មានថតរូបភាពតាមកាលបរិច្ឆេទទេ។ សូមបន្ថែម
         <code>${CONFIG.assetsPath}/ddmmyyyy/</code> រួច push! 🐕`);
-      return;
+        return;
+      }
+
+      // known-upfront stats
+      $("statDays").textContent = dirs.length.toLocaleString(LOCALE);
+      $("statLatest").textContent = shortDate(dirs[0].date);
+      $("timeline").innerHTML = "";
+
+      // infinite scroll — prefetch a bit before reaching the bottom
+      observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) loadMore();
+      }, {rootMargin: "700px 0px"});
+      observer.observe($("sentinel"));
+
+      loadMore(); // first page
     }
 
-    // known-upfront stats
-    $("statDays").textContent = dirs.length.toLocaleString(LOCALE);
-    $("statLatest").textContent = shortDate(dirs[0].date);
-    $("timeline").innerHTML = "";
-
-    // infinite scroll — prefetch a bit before reaching the bottom
-    observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting) loadMore();
-    }, { rootMargin: "700px 0px" });
-    observer.observe($("sentinel"));
-
-    loadMore(); // first page
-  }
-
-  function skeletonGroup() {
-    const wrap = document.createElement("section");
-    wrap.className = "day-group";
-    wrap.innerHTML = `
+    function skeletonGroup() {
+      const wrap = document.createElement("section");
+      wrap.className = "day-group";
+      wrap.innerHTML = `
       <div class="day-header"><span class="title skeleton" style="width:60%;height:1em;border-radius:6px;"></span></div>
-      <div class="grid">${Array.from({length:4}).map(()=>`<div class="sk-tile skeleton"></div>`).join("")}</div>`;
-    return wrap;
-  }
-
-  async function loadMore() {
-    if (loading || cursor >= dirs.length) return;
-    loading = true;
-
-    const slice = dirs.slice(cursor, cursor + BATCH);
-    cursor += slice.length;
-
-    // placeholders keep layout stable while each day's files load
-    const placeholders = slice.map(() => {
-      const sk = skeletonGroup();
-      $("timeline").appendChild(sk);
-      return sk;
-    });
-
-    if (cursor < dirs.length)
-      $("more").innerHTML = `<div class="center"><div class="spinner"></div>កំពុងផ្ទុកបន្ថែម…</div>`;
-
-    await Promise.all(slice.map(async (dir, i) => {
-      let images = [];
-      try {
-        const files = await ghJson(api(`${CONFIG.assetsPath}/${dir.name}`));
-        images = files.filter((f) => f.type === "file" && IMG_RE.test(f.name))
-                      .sort((a, b) => numSort(a.name, b.name))
-                      .map((f) => f.download_url);
-      } catch { /* leave empty on failure */ }
-      renderDay(placeholders[i], dir, images);
-    }));
-
-    loadedPhotos += slice.reduce((n, d) => n + (d._count || 0), 0);
-    $("statPhotos").textContent = loadedPhotos.toLocaleString(LOCALE)
-      + (cursor < dirs.length ? "+" : "");
-
-    $("more").innerHTML = "";
-    loading = false;
-
-    // if the first pages are short and the sentinel is still visible, keep going
-    if (cursor < dirs.length) {
-      const s = $("sentinel").getBoundingClientRect();
-      if (s.top < window.innerHeight + 700) loadMore();
+      <div class="grid">${Array.from({length: 4}).map(() => `<div class="sk-tile skeleton"></div>`).join("")}</div>`;
+      return wrap;
     }
-  }
 
-  function renderDay(placeholder, dir, images) {
-    dir._count = images.length;
-    if (!images.length) { placeholder.remove(); return; }
+    async function loadMore() {
+      if (loading || cursor >= dirs.length) return;
+      loading = true;
 
-    placeholder.innerHTML = `
+      const slice = dirs.slice(cursor, cursor + BATCH);
+      cursor += slice.length;
+
+      // placeholders keep layout stable while each day's files load
+      const placeholders = slice.map(() => {
+        const sk = skeletonGroup();
+        $("timeline").appendChild(sk);
+        return sk;
+      });
+
+      if (cursor < dirs.length)
+        $("more").innerHTML = `<div class="center"><div class="spinner"></div>កំពុងផ្ទុកបន្ថែម…</div>`;
+
+      await Promise.all(slice.map(async (dir, i) => {
+        let images = [];
+        try {
+          const files = await ghJson(api(`${CONFIG.assetsPath}/${dir.name}`));
+          images = files.filter((f) => f.type === "file" && IMG_RE.test(f.name))
+            .sort((a, b) => numSort(a.name, b.name))
+            .map((f) => f.download_url);
+        } catch { /* leave empty on failure */}
+        renderDay(placeholders[i], dir, images);
+      }));
+
+      loadedPhotos += slice.reduce((n, d) => n + (d._count || 0), 0);
+      $("statPhotos").textContent = loadedPhotos.toLocaleString(LOCALE)
+        + (cursor < dirs.length ? "+" : "");
+
+      $("more").innerHTML = "";
+      loading = false;
+
+      // if the first pages are short and the sentinel is still visible, keep going
+      if (cursor < dirs.length) {
+        const s = $("sentinel").getBoundingClientRect();
+        if (s.top < window.innerHeight + 700) loadMore();
+      }
+    }
+
+    function renderDay(placeholder, dir, images) {
+      dir._count = images.length;
+      if (!images.length) {placeholder.remove(); return;}
+
+      placeholder.innerHTML = `
       <div class="day-header">
-        <span class="title">${dayLabel(dir.date)}</span>
+        <span class="dh-text">
+          <span class="title">${lunarLabel(dir.date)}</span>
+          <span class="sub">${gregLabel(dir.date)}</span>
+        </span>
         <span class="count">📸 ${images.length.toLocaleString(LOCALE)}</span>
       </div>
       <div class="grid">
         ${images.map((src) => `<div class="tile"><img loading="lazy" src="${src}" alt="រូបភាពឆ្កែ"></div>`).join("")}
       </div>`;
 
-    placeholder.querySelectorAll(".tile").forEach((tile) => {
-      const img = tile.querySelector("img");
-      if (img.complete) img.classList.add("loaded");
-      else img.addEventListener("load", () => img.classList.add("loaded"), { once: true });
-      tile.addEventListener("click", () => openLightbox(img.src));
-    });
-  }
+      placeholder.querySelectorAll(".tile").forEach((tile) => {
+        const img = tile.querySelector("img");
+        if (img.complete) img.classList.add("loaded");
+        else img.addEventListener("load", () => img.classList.add("loaded"), {once: true});
+        tile.addEventListener("click", () => openLightbox(img.src));
+      });
+    }
 
-  // ---- lightbox ----
-  const lb = $("lightbox");
-  function openLightbox(src) {
-    lb.querySelector("img").src = src;
-    lb.classList.add("open");
-    document.body.style.overflow = "hidden";
-  }
-  function closeLightbox() { lb.classList.remove("open"); document.body.style.overflow = ""; }
-  lb.addEventListener("click", closeLightbox);
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeLightbox(); });
+    // ---- lightbox ----
+    const lb = $("lightbox");
+    function openLightbox(src) {
+      lb.querySelector("img").src = src;
+      lb.classList.add("open");
+      document.body.style.overflow = "hidden";
+    }
+    function closeLightbox() {lb.classList.remove("open"); document.body.style.overflow = "";}
+    lb.addEventListener("click", closeLightbox);
+    document.addEventListener("keydown", (e) => {if (e.key === "Escape") closeLightbox();});
 
-  init();
-</script>
+    init();
+  </script>
 </body>
+
 </html>
