@@ -1,72 +1,95 @@
-# 🐶 Dog Pic & Poop Tracker
+<div align="center">
 
-A static, single-page photo journal. Drop photos into dated folders, push, and the
-page shows them **grouped by Khmer lunar date** — no data entry, no manifest, no API.
+<img src="logo.png" alt="Dog Pic & Poop Tracker" width="160" />
 
-## Daily workflow
-1. Create a folder named by date in **`ddmmyyyy`** format, e.g. for 31 Dec 2027:
+# 🐶 កំណត់ត្រារូបភាព និងលាមកឆ្កែ
+
+**Dog Pic & Poop Tracker** — a zero-backend photo journal that groups your dog's
+daily pics by **Khmer lunar date**. Just drop photos in a folder and push. 🐾
+
+<br />
+
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![PWA](https://img.shields.io/badge/PWA-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)
+![Service Worker](https://img.shields.io/badge/Service%20Worker-FF6C37?style=for-the-badge&logo=serviceworker&logoColor=white)
+![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-222222?style=for-the-badge&logo=githubpages&logoColor=white)
+![Google Fonts](https://img.shields.io/badge/Battambang-4285F4?style=for-the-badge&logo=googlefonts&logoColor=white)
+![momentkh](https://img.shields.io/badge/momentkh-Khmer%20Calendar-FF9F43?style=for-the-badge)
+
+**[🔗 Live demo](https://jkae-nhom.github.io/jkae-nhom/)**
+
+</div>
+
+---
+
+## ✨ Features
+
+- 📅 **Grouped by day**, newest first, headed with the **Khmer lunar (Chhankitek)** date
+  and the Khmer solar date beneath.
+- 🖼️ **Zero data entry** — the page discovers photos by probing `assets/<ddmmyyyy>/`.
+- 🔍 **Photo viewer** — swipe / arrow keys to navigate, double-tap or pinch to zoom,
+  drag or scroll down to close.
+- 📱 **Fully responsive** — 3-up grid on phones, auto-fill on larger screens, notch-safe.
+- 🌗 **Automatic light / dark mode**, Apple-style UI.
+- ⚡ **Fast & offline** — days are cached in `localStorage` and images by a service worker.
+- 🚫 **No API, no rate limits, no manifest** — everything is a plain static request.
+
+## 🚀 Daily workflow
+
+1. 📁 Make a folder named by date in **`ddmmyyyy`** format (e.g. 31 Dec 2027 → `31122027`).
+2. 🖼️ Add photos named **`1.png … 10.png`** (up to 10 per day, contiguous):
    ```
-   assets/31122027/
-   ```
-2. Add photos named **`1`, `2`, `3`, …** (up to 10 per day):
-   ```
-   assets/31122027/1.jpg
+   assets/31122027/1.png
    assets/31122027/2.png
    ```
-3. Commit and push. Done — the page finds them automatically.
+3. ⬆️ Commit and push. Done — the page finds them automatically.
 
-Supported image types: `.jpg .jpeg .png .webp .gif .avif .bmp`.
+> 💡 Photos are `.png`, named sequentially from `1`. A missing `1.png` marks the day empty.
 
-## How it works
-There's no directory listing on GitHub Pages, so the page **enumerates calendar days**
-from a start date up to today, and for each day it just tries to load
-`assets/<ddmmyyyy>/1.ext … 10.ext` directly. Images that load are shown; days with no
-`1.*` are skipped. These are plain static file requests served by GitHub Pages, so
-there is **no API rate limit** and **nothing to maintain** — you only ever add photos.
+## ⚙️ One-time config
 
-### One-time config
-Open `index.html` and set the earliest date you have photos for (edit once):
+Open `index.html` and set your earliest photo day (edit once):
 
 ```js
 const CONFIG = {
-  startDate: "19092026",   // your first photo day, ddmmyyyy
-  maxImagesPerDay: 10,     // photos are named 1..N per day
-  futureBufferDays: 7,     // also checks a few days ahead of today
-  extensions: ["jpg", "jpeg", "png", "webp", "gif", "avif", "bmp"],
+  startDate: "19092026",   // 📆 your first photo day, ddmmyyyy
+  maxImagesPerDay: 10,     // 🔢 photos named 1..N per day
+  futureBufferDays: 7,     // 🔮 also checks a few days ahead of today
+  extensions: ["png"],     // 🖼️ image types to look for
 };
 ```
 
-Notes:
-- Name photos sequentially starting at `1` (a missing `1.*` marks the day empty).
-- Keep `maxImagesPerDay` at whatever your real max is; higher means a few more probe
-  requests per day.
+## 🧠 How it works
 
-## Caching (built for hundreds of days)
-- **Day results** are cached in `localStorage`, so settled (older) days are never
-  re-probed — only the last few days near today are re-checked for new photos.
-- **Image files** are cached by a service worker (`sw.js`) using the Cache API, so
-  revisits are instant and work offline.
-- Tap the **↻** button (top-right) to clear both caches and re-scan everything, e.g.
-  if you ever add photos to an older day.
+There's no directory listing on GitHub Pages, so the page **enumerates calendar days**
+from `startDate` to today and tries to load `assets/<ddmmyyyy>/1.png … 10.png` directly,
+stopping at the first gap. Hits are shown, empty days are skipped — all static requests,
+so there's **no API rate limit** and nothing to maintain. Results are cached in
+`localStorage`, and image files are cached by a service worker (`sw.js`) for instant,
+offline-friendly revisits.
 
-## Viewing
-Photos are grouped by day, newest first, headed with the Khmer lunar (Chhankitek) date
-and the Khmer solar date beneath. Tap a photo to open the viewer: swipe / arrow keys to
-navigate, double-tap or pinch to zoom, and drag or scroll down to close.
+> 🔄 Backfilled photos into an *old* day? Open the console and run `hardRefresh()` to
+> clear caches and re-scan.
 
-## Host on GitHub Pages
-1. Push this repo to GitHub (public).
+## 🧩 Built with
+
+| 🛠️ Tech | Purpose |
+| --- | --- |
+| **Vanilla HTML / CSS / JS** | No framework, single `index.html` |
+| **[momentkh](https://github.com/ThyrithSor/momentkh)** | Khmer lunar (Chhankitek) date conversion |
+| **[Battambang](https://fonts.google.com/specimen/Battambang)** | Khmer web font (Google Fonts) |
+| **Service Worker + Cache API** | Offline image caching (PWA) |
+| **GitHub Pages** | Free static hosting |
+
+## 🌐 Deploy on GitHub Pages
+
+1. Push this repo to GitHub (**public**).
 2. **Settings → Pages → Source → Deploy from a branch** → `main` / `/ (root)` → Save.
-3. Live at `https://<username>.github.io/<repo>/`.
+3. 🎉 Live at `https://<username>.github.io/<repo>/`.
 
-## Folder example
-```
-assets/
-├── 19092026/
-│   ├── 1.png
-│   └── 2.png
-└── 23092026/
-    ├── 1.png
-    ├── 2.png
-    └── 3.png
-```
+<div align="center">
+<br />
+Made with 🧡 for a very good dog.
+</div>
