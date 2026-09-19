@@ -547,6 +547,8 @@
       const cached = cache[dir.name];
       if (cached !== undefined && !isRecent(dir.date)) return cached;
       const images = await probeDay(dir);
+      // offline: probe found nothing but we have a cached copy -> keep showing it
+      if (!images.length && cached && cached.length && navigator.onLine === false) return cached;
       if (JSON.stringify(cached) !== JSON.stringify(images)) { cache[dir.name] = images; cacheDirty = true; }
       return images;
     }
@@ -565,13 +567,12 @@
       return list;
     }
 
-    // Probe a single image URL (served statically by Pages — no API, no rate limit).
-    const tryLoad = (url) => new Promise((resolve) => {
-      const im = new Image();
-      im.onload = () => resolve(true);
-      im.onerror = () => resolve(false);
-      im.src = url;
-    });
+    // Probe a single image URL. HEAD + no-store => always a fresh existence check
+    // (bypasses the browser cache and the service worker, which only handles GET),
+    // so newly-added photos show up on a normal refresh — no hard refresh needed.
+    const tryLoad = (url) => fetch(url, { method: "HEAD", cache: "no-store" })
+      .then((r) => r.ok)
+      .catch(() => false);
 
     // Find image <i> for a day by trying each extension; first hit wins.
     async function findImage(name, i) {

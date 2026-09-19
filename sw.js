@@ -1,5 +1,5 @@
-// Service worker: cache image files (cache-first, immutable) + app shell (stale-while-revalidate).
-const CACHE = "dog-tracker-v1";
+// Service worker: cache image files (cache-first, immutable) + app shell (network-first).
+const CACHE = "dog-tracker-v2";
 const SHELL = ["./", "./index.html", "./momentkh.js"];
 const IMG_RE = /\/assets\/.+\.(jpe?g|png|webp|gif|avif|bmp)$/i;
 
@@ -38,15 +38,16 @@ self.addEventListener("fetch", (e) => {
     return;
   }
 
-  // App shell (same-origin): serve from cache immediately, refresh in the background.
+  // App shell (same-origin): network-first so a normal refresh always gets the latest
+  // page/code; fall back to cache only when offline.
   if (url.origin === location.origin) {
-    e.respondWith(caches.open(CACHE).then(async (c) => {
-      const hit = await c.match(req);
-      const network = fetch(req).then((res) => {
-        if (res.ok) c.put(req, res.clone());
-        return res;
-      }).catch(() => hit);
-      return hit || network;
-    }));
+    e.respondWith(
+      fetch(req)
+        .then((res) => {
+          if (res.ok) caches.open(CACHE).then((c) => c.put(req, res.clone()));
+          return res;
+        })
+        .catch(() => caches.match(req))
+    );
   }
 });
