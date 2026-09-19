@@ -41,6 +41,14 @@ Notes:
 - Keep `maxImagesPerDay` at whatever your real max is; higher means a few more probe
   requests per day.
 
+## Caching (built for hundreds of days)
+- **Day results** are cached in `localStorage`, so settled (older) days are never
+  re-probed — only the last few days near today are re-checked for new photos.
+- **Image files** are cached by a service worker (`sw.js`) using the Cache API, so
+  revisits are instant and work offline.
+- Tap the **↻** button (top-right) to clear both caches and re-scan everything, e.g.
+  if you ever add photos to an older day.
+
 ## Viewing
 Photos are grouped by day, newest first, headed with the Khmer lunar (Chhankitek) date
 and the Khmer solar date beneath. Tap a photo to open the viewer: swipe / arrow keys to

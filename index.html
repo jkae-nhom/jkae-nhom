@@ -92,11 +92,24 @@
       letter-spacing: -.02em;
     }
 
-    .nav p {
-      margin: 2px 0 0;
-      color: var(--muted);
-      font-size: .92rem;
+    #refresh {
+      position: absolute;
+      top: calc(var(--safe-t) + 14px);
+      right: 16px;
+      width: 38px;
+      height: 38px;
+      border: none;
+      border-radius: 50%;
+      background: var(--bg-elevated);
+      color: var(--accent);
+      box-shadow: var(--shadow);
+      font-size: 1.2rem;
+      line-height: 1;
+      cursor: pointer;
+      transition: transform .3s ease;
     }
+
+    #refresh:active { transform: rotate(180deg); }
 
     main {
       max-width: 900px;
@@ -414,8 +427,8 @@
 
 <body>
   <div class="nav">
+    <button id="refresh" type="button" title="ផ្ទុករូបភាពឡើងវិញ" aria-label="ផ្ទុកឡើងវិញ">↻</button>
     <h1>🐶 កំណត់ត្រារូបភាព និងលាមកឆ្កែ</h1>
-    <p>រូបភាពរៀបចំតាមកាលបរិច្ឆេទ</p>
   </div>
 
   <main>
@@ -511,6 +524,33 @@
     let anyRendered = false;
     let observer;
 
+    // ---- data cache (remembers each day's photos so we don't re-probe) ----
+    const CACHE_KEY = "dogTrackerDays_v1";
+    const RECHECK_DAYS = 3;   // days this close to today are always re-probed for new photos
+    let cache = (() => {
+      try { return JSON.parse(localStorage.getItem(CACHE_KEY)) || {}; }
+      catch { return {}; }
+    })();
+    let cacheDirty = false;
+    const saveCache = () => {
+      if (!cacheDirty) return;
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify(cache)); } catch { /* quota */ }
+      cacheDirty = false;
+    };
+    const isRecent = (date) => {
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      return Math.round((today - date) / 86400000) <= RECHECK_DAYS;   // includes today & future
+    };
+
+    // Cached probe: trust the cache for settled (older) days; always re-probe recent days.
+    async function getDayImages(dir) {
+      const cached = cache[dir.name];
+      if (cached !== undefined && !isRecent(dir.date)) return cached;
+      const images = await probeDay(dir);
+      if (JSON.stringify(cached) !== JSON.stringify(images)) { cache[dir.name] = images; cacheDirty = true; }
+      return images;
+    }
+
     // Enumerate every day from CONFIG.startDate up to today (+ buffer), newest first.
     function buildCandidateDirs() {
       const start = parseFolderDate(CONFIG.startDate);
@@ -594,9 +634,10 @@
       $("more").innerHTML = `<div class="center"><div class="spinner"></div>កំពុងស្វែងរករូបភាព…</div>`;
 
       await Promise.all(slice.map(async (dir, i) => {
-        const images = await probeDay(dir);
+        const images = await getDayImages(dir);
         renderDay(placeholders[i], dir, images);
       }));
+      saveCache();
 
       // tally results (slice is newest-first, so keep the first day that has photos)
       for (const dir of slice) {
@@ -822,6 +863,26 @@
       }
       if (e.touches.length === 0) { mode = null; start = null; }
     });
+
+    // ---- caches: register the image-caching service worker ----
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+    }
+
+    // clear data + image caches, then reload (re-probes everything fresh)
+    async function hardRefresh() {
+      try { localStorage.removeItem(CACHE_KEY); } catch {}
+      try {
+        const regs = await navigator.serviceWorker?.getRegistrations?.() || [];
+        await Promise.all(regs.map((r) => r.unregister()));
+      } catch {}
+      try {
+        const keys = await window.caches?.keys?.() || [];
+        await Promise.all(keys.map((k) => caches.delete(k)));
+      } catch {}
+      location.reload();
+    }
+    $("refresh").addEventListener("click", hardRefresh);
 
     init();
   </script>
