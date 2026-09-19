@@ -1,6 +1,6 @@
 // Service worker: cache image files (cache-first, immutable) + app shell (network-first).
 const CACHE = "dog-tracker-v2";
-const SHELL = ["./", "./index.html", "./momentkh.js"];
+const SHELL = ["./", "./index.html", "./styles.css", "./app.js", "./momentkh.js"];
 const IMG_RE = /\/assets\/.+\.(jpe?g|png|webp|gif|avif|bmp)$/i;
 
 self.addEventListener("install", (e) => {
