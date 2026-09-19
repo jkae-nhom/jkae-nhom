@@ -9,7 +9,7 @@
   <title>🐶 កំណត់ត្រារូបភាព និងលាមកឆ្កែ</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;500;600;700&display=swap"
+  <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700;900&display=swap"
     rel="stylesheet">
   <style>
     :root {
@@ -61,8 +61,8 @@
 
     body {
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
-        "Noto Sans Khmer", Roboto, Helvetica, Arial, sans-serif;
+      font-family: "Battambang", -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background: var(--bg);
       color: var(--ink);
       line-height: 1.55;
@@ -438,22 +438,27 @@
       const d = new Date(+yyyy, +mm - 1, +dd);
       return isNaN(d) ? null : d;
     }
-    // Full Khmer lunar (Chhankitek) date, e.g. "ថ្ងៃសៅរ៍ ៨កើត ខែភទ្របទ ឆ្នាំមមី អដ្ឋស័ក ពុទ្ធសករាជ ២៥៧០"
+    const KH = momentkh.constants;
+    // Latin -> Khmer numerals
+    const toKhmer = (s) => String(s).replace(/[0-9]/g, (d) => "០១២៣៤៥៦៧៨៩"[d]);
+
+    // Trimmed Khmer lunar (Chhankitek) date, e.g. "ថ្ងៃពុធ ១២កើត ខែភទ្របទ ឆ្នាំមមី"
     const lunarLabel = (d) => {
-      try { return momentkh.format(momentkh.fromDate(d)); }
+      try { return momentkh.format(momentkh.fromDate(d), "[ថ្ងៃ]W dN [ខែ]m [ឆ្នាំ]a"); }
       catch { return d.toLocaleDateString(LOCALE, {weekday: "long", day: "numeric", month: "long", year: "numeric"}); }
     };
-    // Relative + Gregorian (Khmer) subtitle, e.g. "ថ្ងៃនេះ · ១៩ កញ្ញា ២០២៦"
+    // Relative + Khmer solar (Gregorian) subtitle, e.g. "ថ្ងៃនេះ · ២៣ កញ្ញា ២០២៦"
     const gregLabel = (d) => {
       const today = new Date(); today.setHours(0, 0, 0, 0);
       const that = new Date(d); that.setHours(0, 0, 0, 0);
       const diff = Math.round((today - that) / 86400000);
-      const base = d.toLocaleDateString(LOCALE, {day: "numeric", month: "long", year: "numeric"});
+      const base = `${toKhmer(d.getDate())} ${KH.SolarMonthNames[d.getMonth()]} ${toKhmer(d.getFullYear())}`;
       if (diff === 0) return `ថ្ងៃនេះ · ${base}`;
       if (diff === 1) return `ម្សិលមិញ · ${base}`;
       return base;
     };
-    const shortDate = (d) => d.toLocaleDateString(LOCALE, {day: "numeric", month: "short"});
+    // Short Khmer solar date for the stat, e.g. "២៣ កញ្ញា"
+    const shortDate = (d) => `${toKhmer(d.getDate())} ${KH.SolarMonthNames[d.getMonth()]}`;
     const numSort = (a, b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: "base"});
 
     // ---- DOM helpers ----
@@ -502,7 +507,7 @@
       }
 
       // known-upfront stats
-      $("statDays").textContent = dirs.length.toLocaleString(LOCALE);
+      $("statDays").textContent = toKhmer(dirs.length);
       $("statLatest").textContent = shortDate(dirs[0].date);
       $("timeline").innerHTML = "";
 
@@ -553,7 +558,7 @@
       }));
 
       loadedPhotos += slice.reduce((n, d) => n + (d._count || 0), 0);
-      $("statPhotos").textContent = loadedPhotos.toLocaleString(LOCALE)
+      $("statPhotos").textContent = toKhmer(loadedPhotos)
         + (cursor < dirs.length ? "+" : "");
 
       $("more").innerHTML = "";
@@ -576,7 +581,7 @@
           <span class="title">${lunarLabel(dir.date)}</span>
           <span class="sub">${gregLabel(dir.date)}</span>
         </span>
-        <span class="count">📸 ${images.length.toLocaleString(LOCALE)}</span>
+        <span class="count">📸 ${toKhmer(images.length)}</span>
       </div>
       <div class="grid">
         ${images.map((src) => `<div class="tile"><img loading="lazy" src="${src}" alt="រូបភាពឆ្កែ"></div>`).join("")}
