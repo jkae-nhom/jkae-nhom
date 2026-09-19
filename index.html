@@ -449,40 +449,25 @@
 
   <script src="momentkh.js"></script>
   <script>
-    // ---- Optional manual overrides (blank = auto-detect from the github.io URL) ----
+    // ---- Config ----
     const CONFIG = {
-      owner: "",
-      repo: "",
-      branch: "",
       assetsPath: "assets",
+      // Earliest photo folder you have, in ddmmyyyy. Edit this ONCE to your first day.
+      // The page checks every day from here up to today (+ a small buffer).
+      startDate: "19092026",
+      maxImagesPerDay: 10,          // photos named 1..N (N max) per day folder
+      futureBufferDays: 7,          // also look a few days ahead of today
+      // extensions tried per image, in order (first match wins)
+      extensions: ["jpg", "jpeg", "png", "webp", "gif", "avif", "bmp"],
     };
 
-    const IMG_RE = /\.(jpe?g|png|gif|webp|avif|bmp)$/i;
-    const BATCH = 4;                 // day-folders rendered per scroll page
+    const BATCH = 6;                 // day-folders probed per scroll page
     const LOCALE = "km-KH";
 
-    // ---- repo detection ----
-    function detectRepo() {
-      let {owner, repo} = CONFIG;
-      const host = location.hostname;
-      const parts = location.pathname.split("/").filter(Boolean);
-      if (!owner && host.endsWith(".github.io")) owner = host.replace(".github.io", "");
-      if (!repo) repo = parts.length ? parts[0] : host;
-      return {owner, repo};
-    }
-    const api = (path) => {
-      const {owner, repo} = detectRepo();
-      const ref = CONFIG.branch ? `?ref=${encodeURIComponent(CONFIG.branch)}` : "";
-      return `https://api.github.com/repos/${owner}/${repo}/contents/${path}${ref}`;
-    };
-
-    async function ghJson(url) {
-      const res = await fetch(url, {headers: {Accept: "application/vnd.github+json"}});
-      if (!res.ok) {const e = new Error(`GitHub API ${res.status}`); e.status = res.status; throw e;}
-      return res.json();
-    }
-
     // ---- dates ----
+    const pad2 = (n) => String(n).padStart(2, "0");
+    const folderName = (d) => `${pad2(d.getDate())}${pad2(d.getMonth() + 1)}${d.getFullYear()}`;
+
     function parseFolderDate(name) {
       const m = /^(\d{2})(\d{2})(\d{4})$/.exec(name);
       if (!m) return null;
@@ -511,62 +496,74 @@
     };
     // Short Khmer solar date for the stat, e.g. "២៣ កញ្ញា"
     const shortDate = (d) => `${toKhmer(d.getDate())} ${KH.SolarMonthNames[d.getMonth()]}`;
-    const numSort = (a, b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: "base"});
 
     // ---- DOM helpers ----
     const $ = (id) => document.getElementById(id);
     const notice = (html) => {$("timeline").innerHTML = `<div class="notice">${html}</div>`; $("more").innerHTML = "";};
 
     // ---- state ----
-    let dirs = [];
+    let dirs = [];            // candidate calendar days, newest first
     let cursor = 0;
     let loading = false;
     let loadedPhotos = 0;
+    let daysWithPhotos = 0;
+    let latestDate = null;
+    let anyRendered = false;
     let observer;
 
-    async function init() {
-      const {owner, repo} = detectRepo();
-      if (!owner || !repo) {
-        notice(`រកមិនឃើញ repository ទេ។ សូមបើក <code>index.html</code> ហើយកំណត់
-        <code>CONFIG.owner</code> និង <code>CONFIG.repo</code> ដោយផ្ទាល់។`);
-        return;
+    // Enumerate every day from CONFIG.startDate up to today (+ buffer), newest first.
+    function buildCandidateDirs() {
+      const start = parseFolderDate(CONFIG.startDate);
+      if (!start) return [];
+      const end = new Date(); end.setHours(0, 0, 0, 0);
+      end.setDate(end.getDate() + CONFIG.futureBufferDays);
+      const list = [];
+      for (let d = new Date(end); d >= start; d.setDate(d.getDate() - 1)) {
+        const dt = new Date(d);
+        list.push({ name: folderName(dt), date: dt });
       }
-      $("timeline").innerHTML = `<div class="center"><div class="spinner"></div>កំពុងផ្ទុករូបភាព…</div>`;
+      return list;
+    }
 
-      try {
-        const listing = await ghJson(api(CONFIG.assetsPath));
-        dirs = listing
-          .filter((it) => it.type === "dir" && parseFolderDate(it.name))
-          .map((it) => ({name: it.name, date: parseFolderDate(it.name)}))
-          .sort((a, b) => b.date - a.date);
-      } catch (e) {
-        if (e.status === 404) {
-          notice(`មិនទាន់មានថត <code>${CONFIG.assetsPath}/</code> ក្នុង
-          <code>${owner}/${repo}</code> ទេ។ សូមបន្ថែមថតតាមកាលបរិច្ឆេទ ដូចជា
-          <code>${CONFIG.assetsPath}/31122027/1.jpg</code> រួច push។`);
-        } else if (e.status === 403) {
-          notice(`លើសកម្រិតការហៅ GitHub API (៦០ ដង/ម៉ោង ក្នុងមួយ IP)។ សូមរង់ចាំបន្តិចហើយ refresh។`);
-        } else {
-          notice(`មិនអាចផ្ទុករូបភាពបានទេ (${e.message})។ សូមប្រាកដថា repo ជាសាធារណៈ។`);
-        }
-        return;
+    // Probe a single image URL (served statically by Pages — no API, no rate limit).
+    const tryLoad = (url) => new Promise((resolve) => {
+      const im = new Image();
+      im.onload = () => resolve(true);
+      im.onerror = () => resolve(false);
+      im.src = url;
+    });
+
+    // Find image <i> for a day by trying each extension; first hit wins.
+    async function findImage(name, i) {
+      for (const ext of CONFIG.extensions) {
+        const url = `${CONFIG.assetsPath}/${name}/${i}.${ext}`;
+        if (await tryLoad(url)) return url;
       }
+      return null;
+    }
 
+    // Photos are named 1..N. If "1.*" is missing, treat the day as empty (cheap check).
+    async function probeDay(dir) {
+      const first = await findImage(dir.name, 1);
+      if (!first) return [];
+      const rest = await Promise.all(
+        Array.from({ length: CONFIG.maxImagesPerDay - 1 }, (_, k) => findImage(dir.name, k + 2))
+      );
+      return [first, ...rest.filter(Boolean)];
+    }
+
+    function init() {
+      dirs = buildCandidateDirs();
       if (!dirs.length) {
-        notice(`មិនទាន់មានថតរូបភាពតាមកាលបរិច្ឆេទទេ។ សូមបន្ថែម
-        <code>${CONFIG.assetsPath}/ddmmyyyy/</code> រួច push! 🐕`);
+        notice(`ការកំណត់ <code>startDate</code> ក្នុង <code>index.html</code> មិនត្រឹមត្រូវទេ។ សូមប្រើទម្រង់ ddmmyyyy។`);
         return;
       }
-
-      // known-upfront stats
-      $("statDays").textContent = toKhmer(dirs.length);
-      $("statLatest").textContent = shortDate(dirs[0].date);
       $("timeline").innerHTML = "";
 
-      // infinite scroll — prefetch a bit before reaching the bottom
+      // infinite scroll — probe a bit before reaching the bottom
       observer = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting) loadMore();
-      }, {rootMargin: "700px 0px"});
+      }, {rootMargin: "800px 0px"});
       observer.observe($("sentinel"));
 
       loadMore(); // first page
@@ -577,7 +574,7 @@
       wrap.className = "day-group";
       wrap.innerHTML = `
       <div class="day-header"><span class="title skeleton" style="width:60%;height:1em;border-radius:6px;"></span></div>
-      <div class="grid">${Array.from({length: 4}).map(() => `<div class="sk-tile skeleton"></div>`).join("")}</div>`;
+      <div class="grid">${Array.from({length: 3}).map(() => `<div class="sk-tile skeleton"></div>`).join("")}</div>`;
       return wrap;
     }
 
@@ -588,38 +585,43 @@
       const slice = dirs.slice(cursor, cursor + BATCH);
       cursor += slice.length;
 
-      // placeholders keep layout stable while each day's files load
+      // placeholders keep layout stable while each day is probed
       const placeholders = slice.map(() => {
         const sk = skeletonGroup();
         $("timeline").appendChild(sk);
         return sk;
       });
-
-      if (cursor < dirs.length)
-        $("more").innerHTML = `<div class="center"><div class="spinner"></div>កំពុងផ្ទុកបន្ថែម…</div>`;
+      $("more").innerHTML = `<div class="center"><div class="spinner"></div>កំពុងស្វែងរករូបភាព…</div>`;
 
       await Promise.all(slice.map(async (dir, i) => {
-        let images = [];
-        try {
-          const files = await ghJson(api(`${CONFIG.assetsPath}/${dir.name}`));
-          images = files.filter((f) => f.type === "file" && IMG_RE.test(f.name))
-            .sort((a, b) => numSort(a.name, b.name))
-            .map((f) => f.download_url);
-        } catch { /* leave empty on failure */}
+        const images = await probeDay(dir);
         renderDay(placeholders[i], dir, images);
       }));
 
-      loadedPhotos += slice.reduce((n, d) => n + (d._count || 0), 0);
-      $("statPhotos").textContent = toKhmer(loadedPhotos)
-        + (cursor < dirs.length ? "+" : "");
+      // tally results (slice is newest-first, so keep the first day that has photos)
+      for (const dir of slice) {
+        if (dir._count > 0) {
+          anyRendered = true;
+          daysWithPhotos++;
+          loadedPhotos += dir._count;
+          if (!latestDate) latestDate = dir.date;
+        }
+      }
+      $("statDays").textContent = toKhmer(daysWithPhotos);
+      $("statPhotos").textContent = toKhmer(loadedPhotos) + (cursor < dirs.length ? "+" : "");
+      if (latestDate) $("statLatest").textContent = shortDate(latestDate);
 
       $("more").innerHTML = "";
       loading = false;
 
-      // if the first pages are short and the sentinel is still visible, keep going
+      if (cursor >= dirs.length && !anyRendered) {
+        notice(`មិនទាន់មានរូបភាពទេ។ សូមបន្ថែម <code>${CONFIG.assetsPath}/ddmmyyyy/1.jpg</code> រួច push! 🐕`);
+        return;
+      }
+      // keep probing while the sentinel is still on screen (skips empty days quickly)
       if (cursor < dirs.length) {
         const s = $("sentinel").getBoundingClientRect();
-        if (s.top < window.innerHeight + 700) loadMore();
+        if (s.top < window.innerHeight + 800) loadMore();
       }
     }
 
