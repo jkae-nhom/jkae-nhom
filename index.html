@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🐶 Dog Pic & Poop Tracker</title>
+<style>
+  :root {
+    --bg: #fdf6ec;
+    --card: #ffffff;
+    --ink: #3a2e1f;
+    --muted: #9a8c78;
+    --accent: #ff9f43;
+    --shadow: 0 4px 14px rgba(0,0,0,.08);
+    --radius: 16px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  header { text-align: center; padding: 28px 16px 8px; }
+  header h1 { margin: 0; font-size: 1.9rem; }
+  header p { margin: 4px 0 0; color: var(--muted); }
+  main { max-width: 820px; margin: 0 auto; padding: 16px; }
+
+  .stats { display: flex; gap: 12px; margin-bottom: 20px; }
+  .stat {
+    flex: 1; background: var(--card); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 14px; text-align: center;
+  }
+  .stat .num { font-size: 1.6rem; font-weight: 800; }
+  .stat .lbl { font-size: .78rem; color: var(--muted); }
+
+  .day-group { margin-bottom: 26px; }
+  .day-header {
+    position: sticky; top: 0; background: var(--bg);
+    padding: 8px 4px; font-size: 1.05rem; font-weight: 700;
+    border-bottom: 2px solid #ece2d2; z-index: 2;
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .day-header .count { font-size: .8rem; color: var(--muted); font-weight: 500; }
+
+  .grid {
+    display: grid; gap: 10px; margin-top: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+  .grid img {
+    width: 100%; aspect-ratio: 1; object-fit: cover;
+    border-radius: 12px; box-shadow: var(--shadow);
+    cursor: pointer; background: #f2ece2; transition: transform .12s;
+  }
+  .grid img:hover { transform: scale(1.02); }
+
+  .empty, .loading { text-align: center; color: var(--muted); padding: 40px 16px; }
+  .error {
+    background: #fff3f0; border: 1px solid #f3c4b6; color: #a03018;
+    border-radius: var(--radius); padding: 16px; margin: 12px 0; font-size: .9rem;
+  }
+  .error code { background: rgba(0,0,0,.06); padding: 1px 5px; border-radius: 4px; }
+
+  /* Lightbox */
+  #lightbox {
+    display: none; position: fixed; inset: 0; z-index: 50;
+    background: rgba(0,0,0,.88); align-items: center; justify-content: center;
+    padding: 20px; cursor: zoom-out;
+  }
+  #lightbox.open { display: flex; }
+  #lightbox img { max-width: 100%; max-height: 100%; border-radius: 8px; }
+  #lightbox .close {
+    position: absolute; top: 16px; right: 22px; color: #fff;
+    font-size: 2.4rem; cursor: pointer; line-height: 1;
+  }
+
+  footer { text-align: center; color: var(--muted); font-size: .8rem; padding: 20px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🐶 Dog Pic & Poop Tracker</h1>
+  <p>Photos, grouped by day. Just drop them in <code>assets/</code> and push.</p>
+</header>
+
+<main>
+  <div class="stats">
+    <div class="stat"><div class="num" id="statPhotos">–</div><div class="lbl">📸 Photos</div></div>
+    <div class="stat"><div class="num" id="statDays">–</div><div class="lbl">📅 Days logged</div></div>
+    <div class="stat"><div class="num" id="statLatest">–</div><div class="lbl">🕘 Latest</div></div>
+  </div>
+  <div id="timeline"><div class="loading">Loading photos…</div></div>
+</main>
+
+<div id="lightbox"><span class="close">×</span><img alt="full size"></div>
+
+<footer>
+  Photos are read straight from the repo's <code>assets/&lt;ddmmyyyy&gt;/</code> folders.
+</footer>
+
+<script>
+  // ---- Optional manual overrides (leave blank to auto-detect from the github.io URL) ----
+  const CONFIG = {
+    owner: "",        // e.g. "octocat"
+    repo: "",         // e.g. "jkae-nhom"
+    branch: "",       // e.g. "main" (blank = repo default branch)
+    assetsPath: "assets",
+  };
+
+  const IMG_RE = /\.(jpe?g|png|gif|webp|avif|bmp)$/i;
+
+  // ---- figure out which repo we're on ----
+  function detectRepo() {
+    let { owner, repo } = CONFIG;
+    const host = location.hostname;               // e.g. octocat.github.io
+    const parts = location.pathname.split("/").filter(Boolean);
+    if (!owner && host.endsWith(".github.io")) owner = host.replace(".github.io", "");
+    if (!repo) repo = parts.length ? parts[0] : host;   // project page -> first path seg; user page -> host
+    return { owner, repo };
+  }
+
+  const api = (path) => {
+    const { owner, repo } = detectRepo();
+    const ref = CONFIG.branch ? `?ref=${encodeURIComponent(CONFIG.branch)}` : "";
+    return `https://api.github.com/repos/${owner}/${repo}/contents/${path}${ref}`;
+  };
+
+  // ---- ddmmyyyy -> Date ----
+  function parseFolderDate(name) {
+    const m = /^(\d{2})(\d{2})(\d{4})$/.exec(name);
+    if (!m) return null;
+    const [, dd, mm, yyyy] = m;
+    const d = new Date(+yyyy, +mm - 1, +dd);
+    return isNaN(d) ? null : d;
+  }
+
+  const dayLabel = (d) => {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const that = new Date(d); that.setHours(0,0,0,0);
+    const diff = Math.round((today - that) / 86400000);
+    const base = d.toLocaleDateString(undefined, { weekday:"long", month:"long", day:"numeric", year:"numeric" });
+    if (diff === 0) return `Today · ${base}`;
+    if (diff === 1) return `Yesterday · ${base}`;
+    return base;
+  };
+
+  // numeric-aware sort so 2.jpg comes before 10.jpg
+  const numSort = (a, b) =>
+    a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
+
+  async function ghJson(url) {
+    const res = await fetch(url, { headers: { Accept: "application/vnd.github+json" } });
+    if (!res.ok) {
+      const err = new Error(`GitHub API ${res.status}`);
+      err.status = res.status;
+      throw err;
+    }
+    return res.json();
+  }
+
+  function showError(msg) {
+    document.getElementById("timeline").innerHTML = `<div class="error">${msg}</div>`;
+  }
+
+  async function loadGallery() {
+    const { owner, repo } = detectRepo();
+    if (!owner || !repo) {
+      showError(`Couldn't detect the repository. Open <code>index.html</code> and set
+        <code>CONFIG.owner</code> and <code>CONFIG.repo</code> manually.`);
+      return;
+    }
+
+    let dirs;
+    try {
+      const listing = await ghJson(api(CONFIG.assetsPath));
+      dirs = listing
+        .filter((it) => it.type === "dir" && parseFolderDate(it.name))
+        .map((it) => ({ name: it.name, date: parseFolderDate(it.name) }))
+        .sort((a, b) => b.date - a.date);   // newest first
+    } catch (e) {
+      if (e.status === 404) {
+        showError(`No <code>${CONFIG.assetsPath}/</code> folder found in
+          <code>${owner}/${repo}</code> yet. Add a day folder like
+          <code>${CONFIG.assetsPath}/31122027/1.jpg</code> and push.`);
+      } else if (e.status === 403) {
+        showError(`GitHub API rate limit hit (60 requests/hour per IP for anonymous access).
+          Please wait a bit and refresh.`);
+      } else {
+        showError(`Could not load the gallery (${e.message}). Make sure the repo is public.`);
+      }
+      return;
+    }
+
+    if (!dirs.length) {
+      document.getElementById("timeline").innerHTML =
+        `<div class="empty">No dated photo folders yet. Add <code>${CONFIG.assetsPath}/ddmmyyyy/</code> and push! 🐕</div>`;
+      return;
+    }
+
+    // fetch each day's file list in parallel
+    const days = await Promise.all(dirs.map(async (dir) => {
+      try {
+        const files = await ghJson(api(`${CONFIG.assetsPath}/${dir.name}`));
+        const images = files
+          .filter((f) => f.type === "file" && IMG_RE.test(f.name))
+          .sort((a, b) => numSort(a.name, b.name))
+          .map((f) => f.download_url);
+        return { ...dir, images };
+      } catch {
+        return { ...dir, images: [] };
+      }
+    }));
+
+    render(days);
+  }
+
+  function render(days) {
+    const withPhotos = days.filter((d) => d.images.length);
+    const totalPhotos = withPhotos.reduce((n, d) => n + d.images.length, 0);
+
+    document.getElementById("statPhotos").textContent = totalPhotos;
+    document.getElementById("statDays").textContent = withPhotos.length;
+    document.getElementById("statLatest").textContent =
+      withPhotos.length ? withPhotos[0].date.toLocaleDateString(undefined, { month:"short", day:"numeric" }) : "–";
+
+    if (!withPhotos.length) {
+      document.getElementById("timeline").innerHTML =
+        `<div class="empty">Folders found, but no images inside them yet.</div>`;
+      return;
+    }
+
+    document.getElementById("timeline").innerHTML = withPhotos.map((d) => `
+      <div class="day-group">
+        <div class="day-header">
+          <span>${dayLabel(d.date)}</span>
+          <span class="count">📸 ${d.images.length}</span>
+        </div>
+        <div class="grid">
+          ${d.images.map((src) => `<img loading="lazy" src="${src}" alt="dog photo">`).join("")}
+        </div>
+      </div>`).join("");
+
+    // lightbox
+    const lb = document.getElementById("lightbox");
+    const lbImg = lb.querySelector("img");
+    document.querySelectorAll(".grid img").forEach((img) => {
+      img.onclick = () => { lbImg.src = img.src; lb.classList.add("open"); };
+    });
+    lb.onclick = () => lb.classList.remove("open");
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") document.getElementById("lightbox").classList.remove("open");
+  });
+
+  loadGallery();
+</script>
+</body>
+</html>
