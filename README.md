@@ -18,7 +18,7 @@ daily pics by **Khmer lunar date**. Just drop photos in a folder and push. 🐾
 ![Google Fonts](https://img.shields.io/badge/Battambang-4285F4?style=for-the-badge&logo=googlefonts&logoColor=white)
 ![momentkh](https://img.shields.io/badge/momentkh-Khmer%20Calendar-FF9F43?style=for-the-badge)
 
-**[🔗 Live demo](https://jkae-nhom.github.io/jkae-nhom/)**
+**[🔗 Live demo](https://jkae-nhom.github.io/)**
 
 </div>
 
@@ -56,7 +56,7 @@ Open `index.html` and set your earliest photo day (edit once):
 const CONFIG = {
   startDate: "19092026",   // 📆 your first photo day, ddmmyyyy
   maxImagesPerDay: 10,     // 🔢 photos named 1..N per day
-  futureBufferDays: 7,     // 🔮 also checks a few days ahead of today
+  futureBufferDays: 1,     // 🔮 also checks a day ahead of today
   extensions: ["png"],     // 🖼️ image types to look for
 };
 ```
