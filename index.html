@@ -565,7 +565,11 @@
       }
 
       const images = await probeDay(dir);          // first time for this day
-      if (JSON.stringify(cached) !== JSON.stringify(images)) { cache[dir.name] = images; cacheDirty = true; }
+      // only cache days that HAVE photos — empty days are always re-checked, so a day
+      // that gets photos later (e.g. added while you were away) is never stuck as empty
+      if (images.length && JSON.stringify(cached) !== JSON.stringify(images)) {
+        cache[dir.name] = images; cacheDirty = true;
+      }
       return images;
     }
 
